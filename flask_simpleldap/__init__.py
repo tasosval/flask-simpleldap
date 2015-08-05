@@ -65,6 +65,7 @@ class LDAP(object):
         app.config.setdefault('LDAP_GROUP_MEMBERS_FIELD', 'member')
         app.config.setdefault('LDAP_LOGIN_VIEW', 'login')
         app.config.setdefault('LDAP_REALM_NAME', 'LDAP authentication')
+        app.config.setdefault('LDAP_CONNECT_ACTIVE_DIRECTORY', False)
 
         if app.config['LDAP_USE_SSL'] or app.config['LDAP_USE_TLS']:
             ldap.set_option(ldap.OPT_X_TLS_REQUIRE_CERT,
@@ -94,6 +95,8 @@ class LDAP(object):
                 current_app.config['LDAP_PORT']))
             conn.set_option(ldap.OPT_NETWORK_TIMEOUT,
                             current_app.config['LDAP_TIMEOUT'])
+            if current_app.config['LDAP_CONNECT_ACTIVE_DIRECTORY']:
+                conn.set_option(ldap.OPT_REFERRALS, 0)
             conn.protocol_version = ldap.VERSION3
             if current_app.config['LDAP_USE_TLS']:
                 conn.start_tls_s()
@@ -182,6 +185,9 @@ class LDAP(object):
                         dn = records[0][1][
                             current_app.config['LDAP_OBJECTS_DN']]
                         return dn[0]
+                    else:
+                        # Did not find the user. Return None
+                        return None
                 for k, v in records[0][1].items():
                     result[k] = v
                 return result
